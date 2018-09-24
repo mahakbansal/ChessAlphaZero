@@ -46,10 +46,8 @@ class ChessGame():
         #return self.n*self.n + 1
 
     def getChessMoveFormat(self, x1, y1, x2, y2):
-        row1 = self.letters_inv[x1+1]
-        row2 = self.letters_inv[x2+1]
-        y1=y1+1
-        y2=y2+1
+        row1 = self.letters_inv[x1]
+        row2 = self.letters_inv[x2]
         # print(row2)
         move = ""
         move += str(row1)
@@ -63,25 +61,28 @@ class ChessGame():
         # action must be a valid move
 
         print('ChessGame==>getNextState ','param action number: ', action, 'self.n*self.n: ', self.n*self.n)
-        if action == self.n*self.n: #it means there is no valid action possible therefore just change the player
-        	return (board, -player) #36+1 (valid board moves + no moves possible flag :  indexed 0-36)
+        # if action == (self.n**2)*(self.n**2): #it means there is no valid action possible therefore just change the player
+        	# return (board, -player) #36+1 (valid board moves + no moves possible flag :  indexed 0-36)
         b = Board(self.n)
         b.chessboard = board.copy()
         temp1 = int(action/(self.n*self.n))
         temp2 = action%(self.n*self.n)
-        x1 = int(temp1/self.n)
-        y1 = temp1%self.n
-        x2 = int(temp2/self.n)
-        y2 = temp2%self.n
-        print("selected action: ", x1,y1,x2,y2)
+
+        #converting from 0 index to 1 index
+        x1 = int(temp1/self.n)+1
+        y1 = temp1%self.n+1
+        x2 = int(temp2/self.n)+1
+        y2 = temp2%self.n+1
+        print("selected action: ", x1,y1,x2,y2) #1 indexed
         #move = (int(action/self.n), action%self.n) #to convert the wrapped around vector index to 2D matrix(board) index
         #print('ChessGame==>getNextState ','move: ', str(move),'action/self.n: ', int(action/self.n), 'action%self.n: ', action%self.n)
 
         move = self.getChessMoveFormat(x1,y1,x2,y2)
 
-        print("MOVE: ", move)
+        print("MOVE: ", move, " by converting: ", x1,y1,x2,y2)
 
         b.execute_move(move, player)
+        b.chessboard = b.chessboard.mirror()
         return (b.chessboard, -player)
 
 
@@ -89,31 +90,33 @@ class ChessGame():
 
     def getValidMoves(self, board, player):
         # return a fixed size binary vector
-        print('ChessGame.py==>getValidMoves ', 'parms: ','board: ',board, 'player: ', player)
-        print('ChessGame.py==>getValidMoves ', 'self.getActionSize(): ', self.getActionSize())
+        # print('ChessGame.py==>getValidMoves ', 'parms: ','board: ',board, 'player: ', player)
+        # print('ChessGame.py==>getValidMoves ', 'self.getActionSize(): ', self.getActionSize())
 
 
         valids = [0]*self.getActionSize()
         #b = Board(self.n)
         b = Board(self.n)
         b.chessboard = board.copy()
-        print('OthelloGame.py==>getValidMoves ', 'Board(in OthelloLogic) Object b: ', (b))
+        # print('OthelloGame.py==>getValidMoves ', 'Board(in OthelloLogic) Object b: ', (b))
 
         #b.pieces = np.copy(board)
-        print('OthelloGame.py==>getValidMoves ', 'Board(in OthelloLogic) Object b.pieces: ', str(b.pieces))
+        # print('OthelloGame.py==>getValidMoves ', 'Board(in OthelloLogic) Object b.pieces: ', str(b.pieces))
 
         legalMoves =  b.get_legal_moves(player)
-        print('ChessGame.py==>getValidMoves ','player: ', player, 'legalMoves LENGTH: ', len(str(legalMoves)))
+        # print('ChessGame.py==>getValidMoves ','player: ', player, 'legalMoves LENGTH: ', len(str(legalMoves)))
 
         if len(legalMoves)==0:
         	valids[-1]=1
         	return np.array(valids)
 
         for move in legalMoves:
-            x1 = move[0]
-            y1 = move[1]
-            x2 = move[2]
-            y2 = move[3]
+            #converting 1 index to 0 index
+            #and converted back
+            x1 = move[0]-1
+            y1 = move[1]-1
+            x2 = move[2]-1
+            y2 = move[3]-1
             #print(x1,y1,x2,y2)
             print ("inserting: ", x1,y1,x2,y2, " at: ", (self.n*self.n)*(self.n*x1+y1)+(self.n*x2+y2) )
             valids[(self.n*self.n)*(self.n*x1+y1)+(self.n*x2+y2)]=1
@@ -150,17 +153,31 @@ class ChessGame():
             elif b.result() == "0-1":
                 print("opposite player won")
                 return -1
+            else:
+                print("can_claim_threefold_repetition: ", b.can_claim_threefold_repetition())
+                print("is_fivefold_repetition(): ", b.is_fivefold_repetition())
+                print("can_claim_draw(): ", b.can_claim_draw())
+                print("is_seventyfive_moves(): ", b.is_seventyfive_moves())
+                print("can_claim_fifty_moves(): ", b.can_claim_fifty_moves())
+                return -0.5
+                print("b.result: ", b.result())
         else:
+            print("returning 0")
             return 0
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
         print('OthelloGame.py==>getCanonicalForm ', 'parms: ','board: ',board, 'player: ', player)
         #print('OthelloGame.py==>getCanonicalForm ', 'returns: ','player*board: ',player*board)
-        if player:
+        #b = Board()
+        if board.turn:
+            print("if player boardturn1: ", board.turn)
+            #board.turn = False
             return board
-        else:
-            return board.mirror()
+        elif not board.turn:
+            print("if player boardturn2: ", board.turn)
+            # board.turn = True removed mar 27
+            return board
 
     def getSymmetries(self, board, pi):
         # mirror, rotational
@@ -177,7 +194,7 @@ class ChessGame():
         #             newPi = np.fliplr(newPi)
         #         l += [(newB, list(newPi.ravel()) + [pi[-1]])]
 
-        l=[(board, list(pi_board.ravel())+[pi[-1]])]
+        l=[(board, list(pi_board.ravel()))]
         return l
 
     def stringRepresentation(self, board):

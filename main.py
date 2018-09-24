@@ -1,5 +1,6 @@
+#-*- coding: utf-8 -*-
 from Coach import Coach
-from chess.ChessGame import ChessGame as Game
+#from chess.ChessGame import ChessGame as Game
 from chess.tensorflow.NNet import NNetWrapper as nn
 from utils import *
 import sys
